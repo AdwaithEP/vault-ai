@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-4wz2(q@2*=(f7c=_a0of&-9mfodk^t%6zjuk!p2%0o#-fooy8d
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.vercel.app']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost', 'vault-ai-tvo2.onrender.com']
 
 
 # Application definition
