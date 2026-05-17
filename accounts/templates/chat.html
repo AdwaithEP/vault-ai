@@ -1,0 +1,74 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VaultAI - AI Bot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="navbar">
+        <h1>VaultAI</h1>
+        <div class="navbar-links">
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+            <a href="{% url 'chat' %}" class="active">AI Bot</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            <div class="online-dot"></div>
+            <div class="chat-header-title">Vault<span>AI</span> Assistant</div>
+        </div>
+
+        <div class="chat-messages" id="messages">
+            <div class="msg bot">
+                <div class="msg-avatar">🤖</div>
+                <div class="msg-bubble">Hey! I'm VaultAI bot. Ask me anything about password security!</div>
+            </div>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="chat-input" placeholder="Ask about password strength...">
+            <button onclick="sendMessage()">Send →</button>
+        </div>
+    </div>
+
+    <script>
+        async function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const messages = document.getElementById('messages');
+            const message = input.value.trim();
+            if (!message) return;
+
+            messages.innerHTML += `
+                <div class="msg user">
+                    <div class="msg-avatar">👤</div>
+                    <div class="msg-bubble">${message}</div>
+                </div>`;
+            input.value = '';
+            messages.scrollTop = messages.scrollHeight;
+
+            const response = await fetch('/bot/chat/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
+                body: JSON.stringify({message: message})
+            });
+            const data = await response.json();
+
+            messages.innerHTML += `
+                <div class="msg bot">
+                    <div class="msg-avatar">🤖</div>
+                    <div class="msg-bubble">${data.reply}</div>
+                </div>`;
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        document.getElementById('chat-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+    </script>
+</body>
+</html>
+

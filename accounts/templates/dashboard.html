@@ -1,0 +1,37 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VaultAI - Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="navbar">
+    <h1>VaultAI</h1>
+    <div style="display:flex; gap:12px;">
+        <a href="{% url 'chat' %}">AI Bot</a>
+        <a href="{% url 'logout' %}">Logout</a>
+    </div>
+</div>
+    <div class="dashboard-container">
+        <div class="dashboard-top">
+            <h2>Welcome, <span>{{ request.user.username }}!</span></h2>
+            <a href="{% url 'add_password' %}" class="add-btn">+ Add Password</a>
+        </div>
+        {% for p in passwords %}
+    <div class="vault-item">
+        <div class="vault-item-info">
+            <p>{{ p.site_name }}</p>
+            <p>{{ p.username }}</p>
+            <p class="pw-hidden" onclick="togglePassword(this)" data-pw="{{ p.password }}">••••••••</p>
+        </div>
+        <a href="{% url 'delete_password' p.id %}" class="delete-btn">Delete</a>
+    </div>
+{% empty %}
+    <div class="empty-msg">No passwords yet. Add your first one!</div>
+{% endfor %}
+        </div>
+    </div>
+</body>
+</html>

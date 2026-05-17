@@ -1,0 +1,7 @@
+Django
+psycopg2-binary
+cryptography
+python-dotenv
+google-genai
+google-generativeai
+whitenoise

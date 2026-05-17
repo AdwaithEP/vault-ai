@@ -1,0 +1,35 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VaultAI - Sign Up</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <div class="auth-page">
+        <div class="login-container">
+            <div class="login-logo">VaultAI</div>
+            <p class="login-sub">Create your secure vault</p>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" name="username" placeholder="Choose a username">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" name="password" placeholder="Choose a strong password">
+                </div>
+                <button class="btn-primary" type="submit">Create Account →</button>
+                {% if error %}
+                    <p class="error">{{ error }}</p>
+                {% endif %}
+            </form>
+            <div class="auth-footer">
+                Already have an account? <a href="{% url 'login' %}">Login</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
