@@ -16,7 +16,7 @@ def chat(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         user_message = data.get('message', '')
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-1.5-flash')
         response = model.generate_content(
     f"You are VaultAI, a password security assistant. Help the user with password strength, security advice, and password management tips. User says: {user_message}"
 )
