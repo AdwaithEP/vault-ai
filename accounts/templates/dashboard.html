@@ -3,35 +3,101 @@
 <html>
 <head>
     <title>VaultAI - Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
     <div class="navbar">
-    <h1>VaultAI</h1>
-    <div style="display:flex; gap:12px;">
-        <a href="{% url 'chat' %}">AI Bot</a>
-        <a href="{% url 'logout' %}">Logout</a>
+        <h1>VaultAI</h1>
+        <div style="display:flex; gap:12px;">
+            <a href="{% url 'chat' %}">AI Bot</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
     </div>
-</div>
+
     <div class="dashboard-container">
         <div class="dashboard-top">
             <h2>Welcome, <span>{{ request.user.username }}!</span></h2>
             <a href="{% url 'add_password' %}" class="add-btn">+ Add Password</a>
         </div>
+
         {% for p in passwords %}
-    <div class="vault-item">
-        <div class="vault-item-info">
-            <p>{{ p.site_name }}</p>
-            <p>{{ p.username }}</p>
-            <p class="pw-hidden" onclick="togglePassword(this)" data-pw="{{ p.password }}">••••••••</p>
+        <div class="vault-item">
+            <div class="vault-item-info">
+                <p>{{ p.site_name }}</p>
+                <p>{{ p.username }}</p>
+                <p class="pw-hidden" id="pw-{{ p.id }}">••••••••</p>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button class="reveal-btn" onclick="revealPassword('{{ p.id }}')">👁 Show</button>
+                <a href="{% url 'delete_password' p.id %}" class="delete-btn">Delete</a>
+            </div>
         </div>
-        <a href="{% url 'delete_password' p.id %}" class="delete-btn">Delete</a>
+        {% empty %}
+            <div class="empty-msg">No passwords yet. Add your first one!</div>
+        {% endfor %}
     </div>
-{% empty %}
-    <div class="empty-msg">No passwords yet. Add your first one!</div>
-{% endfor %}
+
+    <!-- PIN Modal -->
+    <div id="pin-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center;">
+        <div style="background:#1a1a1a; padding:30px; border-radius:12px; text-align:center;">
+            <h3 style="color:#00ff88; margin-bottom:16px;">Enter PIN to reveal</h3>
+            <input type="password" id="pin-input" placeholder="Enter your PIN" maxlength="6" style="padding:10px; border-radius:8px; border:1px solid #333; background:#111; color:white; font-size:18px; text-align:center; width:150px;">
+            <br><br>
+            <button onclick="submitPin()" style="background:#00ff88; color:black; padding:10px 24px; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">Confirm</button>
+            <button onclick="closeModal()" style="background:#333; color:white; padding:10px 24px; border:none; border-radius:8px; cursor:pointer; margin-left:8px;">Cancel</button>
+            <p id="pin-error" style="color:red; margin-top:8px;"></p>
         </div>
     </div>
+
+    <script>
+        let currentPwId = null;
+        const CORRECT_PIN = "{{ request.user.date_joined|date:'dmY'|slice:':4' }}";
+
+        function revealPassword(id) {
+            currentPwId = id;
+            document.getElementById('pin-input').value = '';
+            document.getElementById('pin-error').textContent = '';
+            document.getElementById('pin-modal').style.display = 'flex';
+            document.getElementById('pin-input').focus();
+        }
+
+        async function submitPin() {
+            const pin = document.getElementById('pin-input').value;
+            const response = await fetch('/vault/reveal/', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+                body: JSON.stringify({id: currentPwId, pin: pin})
+            });
+            const data = await response.json();
+            if (data.success) {
+                document.getElementById('pw-' + currentPwId).textContent = data.password;
+                closeModal();
+            } else {
+                document.getElementById('pin-error').textContent = 'Wrong PIN!';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('pin-modal').style.display = 'none';
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                document.cookie.split(';').forEach(function(cookie) {
+                    cookie = cookie.trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    }
+                });
+            }
+            return cookieValue;
+        }
+
+        document.getElementById('pin-input').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') submitPin();
+        });
+    </script>
 </body>
 </html>
