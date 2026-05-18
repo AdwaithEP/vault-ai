@@ -3,7 +3,7 @@
 <html>
 <head>
     <title>VaultAI - AI Bot</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
@@ -25,7 +25,7 @@
         <div class="chat-messages" id="messages">
             <div class="msg bot">
                 <div class="msg-avatar">🤖</div>
-                <div class="msg-bubble">Hey! I'm VaultAI bot. Ask me anything about password security!</div>
+                <div class="msg-bubble">Hey! I'm VaultAI bot. Ask me anything about password security</div>
             </div>
         </div>
 
@@ -36,6 +36,8 @@
     </div>
 
     <script>
+        let conversationHistory = [];
+
         async function sendMessage() {
             const input = document.getElementById('chat-input');
             const messages = document.getElementById('messages');
@@ -50,12 +52,16 @@
             input.value = '';
             messages.scrollTop = messages.scrollHeight;
 
+            conversationHistory.push({"role": "user", "content": message});
+
             const response = await fetch('/bot/chat/', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
-                body: JSON.stringify({message: message})
+                body: JSON.stringify({message: message, history: conversationHistory})
             });
             const data = await response.json();
+
+            conversationHistory.push({"role": "assistant", "content": data.reply});
 
             messages.innerHTML += `
                 <div class="msg bot">
@@ -71,4 +77,3 @@
     </script>
 </body>
 </html>
-

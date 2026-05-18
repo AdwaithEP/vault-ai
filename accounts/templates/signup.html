@@ -2,34 +2,52 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>VaultAI - Sign Up</title>
+    <title>VaultAI - Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <div class="auth-page">
-        <div class="login-container">
-            <div class="login-logo">VaultAI</div>
-            <p class="login-sub">Create your secure vault</p>
-            <form method="POST">
-                {% csrf_token %}
-                <div class="form-group">
-                    <label class="form-label">Username</label>
-                    <input type="text" name="username" placeholder="Choose a username">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Password</label>
-                    <input type="password" name="password" placeholder="Choose a strong password">
-                </div>
-                <button class="btn-primary" type="submit">Create Account →</button>
-                {% if error %}
-                    <p class="error">{{ error }}</p>
-                {% endif %}
-            </form>
-            <div class="auth-footer">
-                Already have an account? <a href="{% url 'login' %}">Login</a>
-            </div>
+    <div class="navbar">
+        <h1>VaultAI</h1>
+        <div class="navbar-links">
+            <a href="{% url 'dashboard' %}" class="active">Dashboard</a>
+            <a href="{% url 'chat' %}">AI Bot</a>
+            <a href="{% url 'logout' %}">Logout</a>
         </div>
     </div>
+
+    <div class="dashboard-container">
+        <div class="dashboard-top">
+            <h2>Welcome, <span>{{ request.user.username }}!</span></h2>
+            <a href="{% url 'add_password' %}" class="add-btn">+ Add Password</a>
+        </div>
+
+        <div class="vault-list">
+            {% for p in passwords %}
+                <div class="vault-item">
+                    <div class="vault-item-info">
+                        <p>{{ p.site_name }}</p>
+                        <p>{{ p.username }}</p>
+                        <p class="pw-hidden" onclick="togglePassword(this)" data-pw="{{ p.password }}">•••••••• (click to reveal)</p>
+                    </div>
+                    <a href="{% url 'delete_password' p.id %}" class="delete-btn">Delete</a>
+                </div>
+            {% empty %}
+                <div class="empty-msg">
+                    No passwords yet.<br>Click "+ Add Password" to get started!
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <script>
+        function togglePassword(el) {
+            if (el.textContent.includes('click to reveal')) {
+                el.textContent = el.dataset.pw;
+            } else {
+                el.textContent = '•••••••• (click to reveal)';
+            }
+        }
+    </script>
 </body>
 </html>
