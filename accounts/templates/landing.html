@@ -1,0 +1,107 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VaultAI — Your Security. Revitalized.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body class="landing-body">
+
+<!-- SVG noise filter (Aura-style gradient text) -->
+<svg width="0" height="0" style="position:absolute;overflow:hidden">
+  <defs>
+    <filter id="noise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.3 0"/>
+      <feComposite in2="SourceGraphic" operator="in" result="noise"/>
+      <feBlend in="SourceGraphic" in2="noise" mode="multiply"/>
+    </filter>
+  </defs>
+</svg>
+
+<!-- Nav -->
+<nav class="landing-nav">
+  <div class="landing-nav-inner">
+    <div class="landing-logo">
+     <div class="landing-logo-icon">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+  </div>
+      VaultAI
+    </div>
+    <a href="{% url 'login' %}" class="btn-nav-cta">Get Started →</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="landing-hero">
+  <div class="hero-badge">
+    <span class="hero-badge-dot"></span>
+    Now live — Packet Tracer &amp; URL Scanner
+  </div>
+  <h1 class="hero-title">
+    <span class="plain">Your security.</span>
+    <span class="gradient-text" style="filter:url(#noise)">Revitalized.</span>
+  </h1>
+  <p class="hero-sub">
+    VaultAI is the premier security platform for the modern era.
+    Manage passwords, train against phishing, scan URLs, and learn
+    offensive security — all in one place.
+  </p>
+  <div class="hero-cta">
+    <a href="{% url 'signup' %}" class="btn-hero-primary">Get Started Free →</a>
+    <a href="{% url 'login' %}" class="btn-hero-secondary">Login</a>
+  </div>
+</section>
+
+<!-- Features -->
+<div class="landing-features">
+  <div class="feature-card glass">
+    <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+ </div>
+    <div class="feature-title">Password Vault</div>
+    <div class="feature-desc">Store and encrypt all your passwords with military-grade Fernet encryption. Access them anywhere, any time.</div>
+  </div>
+  <div class="feature-card glass">
+    <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg>
+ </div>
+    <div class="feature-title">AI Security Bot</div>
+    <div class="feature-desc">Get real-time password suggestions, strength analysis, and security advice powered by Groq's Llama 3 model.</div>
+  </div>
+  <div class="feature-card glass">
+    <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+ </div>
+    <div class="feature-title">Packet Tracer</div>
+    <div class="feature-desc">Train yourself to spot phishing attempts with interactive challenges. Level up your real-world threat detection.</div>
+  </div>
+  <div class="feature-card glass">
+    <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+ </div>
+    <div class="feature-title">URL Scanner</div>
+    <div class="feature-desc">Scan any URL before you visit it. Instantly detect malicious links, suspicious redirects, and known threats.</div>
+  </div>
+  <div class="feature-card glass">
+    <div class="feature-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+    <div class="feature-title">Security Score</div>
+    <div class="feature-desc">Get a live security score based on your password health. See weak points and fix them instantly.</div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="landing-cta-section">
+  <div class="landing-cta-box glass">
+    <h2>Lock it down.<br>Own your security.</h2>
+    <p>Join developers, founders, and teams who treat security as a practice — not an afterthought.</p>
+    <div class="landing-cta-btns">
+      <a href="{% url 'signup' %}" class="btn-hero-primary">Get Started Free</a>
+    </div>
+  </div>
+</div>
+
+<footer class="landing-footer">VaultAI © 2025 · All rights reserved</footer>
+
+</body>
+</html>

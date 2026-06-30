@@ -1,79 +1,125 @@
 {% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>VaultAI - AI Bot</title>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VaultAI — AI Bot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-    <div class="navbar">
-        <h1>VaultAI</h1>
-        <div class="navbar-links">
-            <a href="{% url 'dashboard' %}">Dashboard</a>
-            <a href="{% url 'chat' %}" class="active">AI Bot</a>
-            <a href="{% url 'logout' %}">Logout</a>
-        </div>
+<div class="app-shell">
+  <!-- ════════════════════════════════════
+     REPLACE YOUR <aside class="sidebar"> BLOCK WITH THIS
+     ════════════════════════════════════ -->
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <span class="sidebar-logo-text">VaultAI</span>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Vault</div>
+    <nav class="sidebar-nav">
+      <a href="{% url 'dashboard' %}" class="active">
+        <span class="nav-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="16" r="1"/><rect x="3" y="10" width="18" height="12" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></svg></span>
+        Passwords
+        <span class="sidebar-badge">{{ passwords|length }}</span>
+      </a>
+    </nav>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Security</div>
+    <nav class="sidebar-nav">
+      <a href="{% url 'scanner' %}">
+        <span class="nav-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        URL Scanner
+      </a>
+      <a href="{% url 'packet_tracer' %}">
+        <span class="nav-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></span>
+        Packet Tracer
+      </a>
+      <a href="{% url 'chat' %}">
+        <span class="nav-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg></span>
+        AI Bot
+      </a>
+    </nav>
+  </div>
+
+  <div class="sidebar-footer">
+    <a href="{% url 'logout' %}">
+      <span class="nav-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
+      Logout
+    </a>
+  </div>
+</aside>
+
+  <main class="main-content" style="display:flex;flex-direction:column;">
+    <div class="chat-header">
+      <div class="online-dot"></div>
+      <div class="chat-title">VaultAI Assistant</div>
     </div>
 
-    <div class="chat-container">
-        <div class="chat-header">
-            <div class="online-dot"></div>
-            <div class="chat-header-title">Vault<span>AI</span> Assistant</div>
-        </div>
-
-        <div class="chat-messages" id="messages">
-            <div class="msg bot">
-                <div class="msg-avatar">🤖</div>
-                <div class="msg-bubble">Hey! I'm VaultAI bot. Ask me anything about password security</div>
-            </div>
-        </div>
-
-        <div class="chat-input-area">
-            <input type="text" id="chat-input" placeholder="Ask about password strength...">
-            <button onclick="sendMessage()">Send →</button>
-        </div>
+    <div class="chat-messages" id="messages">
+      <div class="msg bot">
+        <div class="msg-avatar">🤖</div>
+        <div class="msg-bubble">Hey! I'm your VaultAI security assistant. Ask me anything about password strength, security tips, or how to manage your vault.</div>
+      </div>
     </div>
 
-    <script>
-        let conversationHistory = [];
+    <div class="chat-input-row glass">
+      <input type="text" id="chat-input" placeholder="Ask about password security…">
+      <button class="btn-send" onclick="sendMessage()">Send →</button>
+    </div>
+  </main>
+</div>
 
-        async function sendMessage() {
-            const input = document.getElementById('chat-input');
-            const messages = document.getElementById('messages');
-            const message = input.value.trim();
-            if (!message) return;
+<script>
+  let conversationHistory = [];
 
-            messages.innerHTML += `
-                <div class="msg user">
-                    <div class="msg-avatar">👤</div>
-                    <div class="msg-bubble">${message}</div>
-                </div>`;
-            input.value = '';
-            messages.scrollTop = messages.scrollHeight;
+  async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const messages = document.getElementById('messages');
+    const message = input.value.trim();
+    if (!message) return;
 
-            conversationHistory.push({"role": "user", "content": message});
+    messages.innerHTML += `<div class="msg user"><div class="msg-avatar">👤</div><div class="msg-bubble">${escapeHtml(message)}</div></div>`;
+    input.value = '';
+    messages.scrollTop = messages.scrollHeight;
 
-            const response = await fetch('/bot/chat/', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}'},
-                body: JSON.stringify({message: message, history: conversationHistory})
-            });
-            const data = await response.json();
+    const typingId = 'typing-' + Date.now();
+    messages.innerHTML += `<div class="msg bot" id="${typingId}"><div class="msg-avatar">🤖</div><div class="msg-bubble typing">Thinking…</div></div>`;
+    messages.scrollTop = messages.scrollHeight;
 
-            conversationHistory.push({"role": "assistant", "content": data.reply});
+    conversationHistory.push({ role: 'user', content: message });
 
-            messages.innerHTML += `
-                <div class="msg bot">
-                    <div class="msg-avatar">🤖</div>
-                    <div class="msg-bubble">${data.reply}</div>
-                </div>`;
-            messages.scrollTop = messages.scrollHeight;
-        }
+    try {
+      const res = await fetch('/bot/chat/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({ message, history: conversationHistory })
+      });
+      const data = await res.json();
+      conversationHistory.push({ role: 'assistant', content: data.reply });
+      document.getElementById(typingId).remove();
+      messages.innerHTML += `<div class="msg bot"><div class="msg-avatar">🤖</div><div class="msg-bubble">${escapeHtml(data.reply)}</div></div>`;
+    } catch {
+      document.getElementById(typingId).remove();
+      messages.innerHTML += `<div class="msg bot"><div class="msg-avatar">🤖</div><div class="msg-bubble typing">Something went wrong. Please try again.</div></div>`;
+    }
+    messages.scrollTop = messages.scrollHeight;
+  }
 
-        document.getElementById('chat-input').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') sendMessage();
-        });
-    </script>
+  document.getElementById('chat-input').addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+</script>
 </body>
 </html>

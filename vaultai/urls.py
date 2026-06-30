@@ -17,11 +17,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import redirect
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('accounts.urls')),
     path('vault/', include('vault.urls')),
     path('bot/', include('bot.urls')),
-    path('', lambda request: redirect('login')),
+    path('scanner/', include('scanner.urls')),   
+    path('packets/', include('packets.urls')), 
+    path('',TemplateView.as_view(template_name='landing.html'),name='landing'),
 ]

@@ -1,0 +1,478 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VaultAI — Packet Tracer</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <style>
+    /* ── Layout ── */
+    .pt-layout { display: flex; flex-direction: column; gap: 18px; }
+
+    /* ── Input area ── */
+    .pt-input-card { border-radius: 20px; padding: 24px; }
+    .pt-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+    .pt-tab {
+      padding: 7px 16px; border-radius: 999px; font-size: 0.8rem; font-weight: 600;
+      border: 1px solid rgba(255,255,255,0.1); background: transparent; color: rgba(255,255,255,0.5);
+      cursor: pointer; transition: all 0.15s;
+    }
+    .pt-tab.active { background: white; color: #000; border-color: white; }
+
+    .pt-panel { display: none; }
+    .pt-panel.active { display: block; }
+
+    .pt-drop-zone {
+      border: 2px dashed rgba(255,255,255,0.12); border-radius: 14px;
+      padding: 40px; text-align: center; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .pt-drop-zone:hover, .pt-drop-zone.drag-over {
+      border-color: var(--accent); background: rgba(0,210,255,0.04);
+    }
+    .pt-drop-icon { font-size: 2rem; margin-bottom: 10px; }
+    .pt-drop-label { font-size: 0.85rem; color: rgba(255,255,255,0.5); }
+    .pt-drop-label span { color: var(--accent); cursor: pointer; }
+    .pt-drop-sub { font-size: 0.72rem; color: rgba(255,255,255,0.3); margin-top: 5px; }
+    #pcap-file-input { display: none; }
+    .pt-file-chosen { font-size: 0.8rem; color: var(--accent); margin-top: 10px; }
+
+    textarea.pt-textarea {
+      width: 100%; height: 160px; background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
+      color: white; padding: 14px; font-size: 0.78rem; font-family: monospace;
+      resize: vertical; outline: none; transition: border-color 0.15s; line-height: 1.6;
+    }
+    textarea.pt-textarea:focus { border-color: var(--accent); }
+    textarea.pt-textarea::placeholder { color: rgba(255,255,255,0.25); }
+
+    .pt-analyze-row { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+    .btn-analyze {
+      background: white; color: #000; border: none; border-radius: 999px;
+      padding: 10px 24px; font-size: 0.85rem; font-weight: 700; transition: opacity 0.15s;
+    }
+    .btn-analyze:hover { opacity: 0.85; }
+    .btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; }
+    .pt-status { font-size: 0.78rem; color: rgba(255,255,255,0.4); }
+
+    /* ── Stats bar ── */
+    .pt-stats-bar { display: flex; gap: 12px; flex-wrap: wrap; }
+    .pt-stat-pill {
+      display: flex; align-items: center; gap: 7px;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px; padding: 6px 14px; font-size: 0.78rem;
+    }
+    .proto-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Filter row ── */
+    .pt-filter-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .pt-filter-input {
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 999px; color: white; padding: 8px 16px; font-size: 0.82rem;
+      outline: none; width: 220px; transition: border-color 0.15s; font-family: inherit;
+    }
+    .pt-filter-input:focus { border-color: var(--accent); }
+    .pt-filter-input::placeholder { color: rgba(255,255,255,0.3); }
+    .proto-filter-btn {
+      padding: 6px 14px; border-radius: 999px; font-size: 0.75rem; font-weight: 600;
+      border: 1px solid rgba(255,255,255,0.1); background: transparent;
+      color: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.15s;
+    }
+    .proto-filter-btn.active { background: rgba(0,210,255,0.12); color: var(--accent); border-color: rgba(0,210,255,0.3); }
+
+    /* ── Packet table ── */
+    .pt-table-wrap {
+      border-radius: 16px; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.07);
+      max-height: 420px; overflow-y: auto;
+    }
+    .pt-table-wrap::-webkit-scrollbar { width: 4px; }
+    .pt-table-wrap::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+    .pt-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    .pt-table th {
+      text-align: left; padding: 10px 14px;
+      font-size: 0.65rem; font-weight: 600; letter-spacing: 0.8px; text-transform: uppercase;
+      color: rgba(255,255,255,0.3); background: rgba(0,0,0,0.4);
+      position: sticky; top: 0; z-index: 2;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .pt-table td { padding: 9px 14px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+    .pt-table tr:last-child td { border-bottom: none; }
+    .pt-table tr { cursor: pointer; transition: background 0.1s; }
+    .pt-table tr:hover td { background: rgba(255,255,255,0.03); }
+    .pt-table tr.selected td { background: rgba(0,210,255,0.07); }
+
+    .proto-badge {
+      display: inline-block; padding: 2px 8px; border-radius: 5px;
+      font-size: 0.68rem; font-weight: 700; letter-spacing: 0.3px;
+    }
+    .proto-TCP   { background: rgba(79,142,247,0.2);  color: #7ab3ff; }
+    .proto-UDP   { background: rgba(139,92,246,0.2);  color: #c4b5fd; }
+    .proto-DNS   { background: rgba(16,185,129,0.2);  color: #6ee7b7; }
+    .proto-HTTP  { background: rgba(245,158,11,0.2);  color: #fcd34d; }
+    .proto-TLS   { background: rgba(0,210,255,0.15);  color: #67e8f9; }
+    .proto-ICMP  { background: rgba(236,72,153,0.2);  color: #f9a8d4; }
+    .proto-SSH   { background: rgba(16,185,129,0.15); color: #a7f3d0; }
+    .proto-FTP   { background: rgba(245,166,35,0.2);  color: #fde68a; }
+    .proto-SMTP  { background: rgba(249,115,22,0.2);  color: #fdba74; }
+    .proto-default { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.6); }
+
+    .mono { font-family: monospace; font-size: 0.75rem; }
+
+    /* ── Detail panel ── */
+    .pt-detail { border-radius: 16px; padding: 20px; display: none; }
+    .pt-detail.show { display: block; }
+    .pt-detail-title { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.8px; color: rgba(255,255,255,0.3); margin-bottom: 12px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+    .detail-field { background: rgba(255,255,255,0.03); border-radius: 10px; padding: 10px 14px; }
+    .detail-key { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; color: rgba(255,255,255,0.3); margin-bottom: 3px; }
+    .detail-val { font-size: 0.82rem; font-family: monospace; color: rgba(255,255,255,0.85); word-break: break-all; }
+    .hex-dump {
+      background: rgba(0,0,0,0.4); border-radius: 10px; padding: 14px;
+      font-family: monospace; font-size: 0.72rem; color: rgba(255,255,255,0.5);
+      line-height: 1.8; word-break: break-all; max-height: 120px; overflow-y: auto;
+    }
+
+    .empty-pt { text-align: center; padding: 60px 20px; color: rgba(255,255,255,0.3); }
+    .empty-pt-icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .empty-pt p { font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <!-- ════════════════════════════════════
+     REPLACE YOUR <aside class="sidebar"> BLOCK WITH THIS
+     ════════════════════════════════════ -->
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="sidebar-logo-icon">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    </div>
+    <span class="sidebar-logo-text">VaultAI</span>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Vault</div>
+    <nav class="sidebar-nav">
+      <a href="{% url 'dashboard' %}" class="active">
+        <span class="nav-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="16" r="1"/><rect x="3" y="10" width="18" height="12" rx="2"/><path d="M7 10V7a5 5 0 0 1 10 0v3"/></svg></span>
+        Passwords
+        <span class="sidebar-badge">{{ passwords|length }}</span>
+      </a>
+    </nav>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-label">Security</div>
+    <nav class="sidebar-nav">
+      <a href="{% url 'scanner' %}">
+        <span class="nav-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
+        URL Scanner
+      </a>
+      <a href="{% url 'packet_tracer' %}">
+        <span class="nav-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg></span>
+        Packet Tracer
+      </a>
+      <a href="{% url 'chat' %}">
+        <span class="nav-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/></svg></span>
+        AI Bot
+      </a>
+    </nav>
+  </div>
+
+  <div class="sidebar-footer">
+    <a href="{% url 'logout' %}">
+      <span class="nav-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
+      Logout
+    </a>
+  </div>
+</aside>
+
+  <main class="main-content">
+    <div class="page-header">
+      <div class="page-title">Packet Tracer</div>
+      <div class="page-subtitle">Upload a PCAP or paste tcpdump output to analyze network traffic</div>
+    </div>
+
+    <div class="pt-layout">
+
+      <!-- Input card -->
+      <div class="pt-input-card glass">
+        <div class="pt-tabs">
+          <button class="pt-tab active" onclick="switchTab('pcap', this)">📁 Upload PCAP</button>
+          <button class="pt-tab" onclick="switchTab('text', this)">📋 Paste tcpdump</button>
+        </div>
+
+        <!-- PCAP upload -->
+        <div class="pt-panel active" id="panel-pcap">
+          <div class="pt-drop-zone" id="drop-zone" onclick="document.getElementById('pcap-file-input').click()"
+            ondragover="event.preventDefault();this.classList.add('drag-over')"
+            ondragleave="this.classList.remove('drag-over')"
+            ondrop="handleDrop(event)">
+            <div class="pt-drop-icon">📡</div>
+            <div class="pt-drop-label">Drop your <strong>.pcap</strong> file here, or <span>browse</span></div>
+            <div class="pt-drop-sub">Supports .pcap and .pcapng · Max 500 packets shown</div>
+            <input type="file" id="pcap-file-input" accept=".pcap,.pcapng" onchange="handleFileSelect(event)">
+          </div>
+          <div class="pt-file-chosen" id="file-chosen"></div>
+        </div>
+
+        <!-- Text paste -->
+        <div class="pt-panel" id="panel-text">
+          <textarea class="pt-textarea" id="text-input" placeholder="Paste tcpdump output here...
+
+Example:
+10:42:01.123456 IP 192.168.1.5.54321 > 8.8.8.8.53: UDP
+10:42:01.456789 IP 8.8.8.8.53 > 192.168.1.5.54321: UDP
+10:42:02.001234 IP 192.168.1.5.80 > 93.184.216.34.443: Flags [S]"></textarea>
+        </div>
+
+        <div class="pt-analyze-row">
+          <button class="btn-analyze" id="analyze-btn" onclick="analyze()">Analyze →</button>
+          <span class="pt-status" id="pt-status"></span>
+        </div>
+      </div>
+
+      <!-- Stats bar (hidden until results) -->
+      <div id="stats-section" style="display:none">
+        <div class="pt-stats-bar" id="stats-bar"></div>
+      </div>
+
+      <!-- Filter row -->
+      <div id="filter-section" style="display:none">
+        <div class="pt-filter-row">
+          <input class="pt-filter-input" id="filter-input" placeholder="Filter: ip, port, protocol…" oninput="applyFilter()">
+          <div id="proto-filters"></div>
+        </div>
+      </div>
+
+      <!-- Packet table -->
+      <div id="table-section" style="display:none">
+        <div class="pt-table-wrap">
+          <table class="pt-table">
+            <thead>
+              <tr>
+                <th style="width:50px">No.</th>
+                <th style="width:110px">Time</th>
+                <th>Source</th>
+                <th>Destination</th>
+                <th style="width:90px">Protocol</th>
+                <th style="width:70px">Length</th>
+                <th>Info</th>
+              </tr>
+            </thead>
+            <tbody id="packet-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Detail panel -->
+      <div class="pt-detail glass" id="detail-panel">
+        <div class="pt-detail-title">Packet Detail</div>
+        <div class="detail-grid" id="detail-grid"></div>
+        <div class="pt-detail-title" id="hex-label" style="display:none">Hex Dump</div>
+        <div class="hex-dump" id="hex-dump" style="display:none"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  let currentMode = 'pcap';
+  let allPackets = [];
+  let selectedFile = null;
+
+  const PROTO_COLORS = {
+    TCP:'#7ab3ff', UDP:'#c4b5fd', DNS:'#6ee7b7', HTTP:'#fcd34d',
+    TLS:'#67e8f9', ICMP:'#f9a8d4', SSH:'#a7f3d0', FTP:'#fde68a',
+    SMTP:'#fdba74', default:'rgba(255,255,255,0.6)'
+  };
+
+  function switchTab(mode, btn) {
+    currentMode = mode;
+    document.querySelectorAll('.pt-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.pt-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + mode).classList.add('active');
+  }
+
+  function handleFileSelect(e) {
+    selectedFile = e.target.files[0];
+    if (selectedFile) document.getElementById('file-chosen').textContent = '✓ ' + selectedFile.name;
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('drop-zone').classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) { selectedFile = file; document.getElementById('file-chosen').textContent = '✓ ' + file.name; }
+  }
+
+  async function analyze() {
+    const btn = document.getElementById('analyze-btn');
+    const status = document.getElementById('pt-status');
+    btn.disabled = true;
+    status.textContent = 'Analyzing…';
+
+    try {
+      let body;
+      if (currentMode === 'pcap') {
+        if (!selectedFile) { status.textContent = 'No file selected.'; btn.disabled = false; return; }
+        const b64 = await fileToBase64(selectedFile);
+        body = { mode: 'pcap', pcap_b64: b64 };
+      } else {
+        const text = document.getElementById('text-input').value.trim();
+        if (!text) { status.textContent = 'No text entered.'; btn.disabled = false; return; }
+        body = { mode: 'text', text };
+      }
+
+      const res = await fetch('{% url "analyze_packets" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+        body: JSON.stringify(body)
+      });
+      const data = await res.json();
+
+      if (data.error) { status.textContent = 'Error: ' + data.error; btn.disabled = false; return; }
+
+      allPackets = data.packets;
+      status.textContent = `${data.total} packets loaded`;
+      renderStats(data.proto_counts);
+      renderTable(allPackets);
+
+    } catch(e) {
+      status.textContent = 'Failed: ' + e.message;
+    }
+    btn.disabled = false;
+  }
+
+  function renderStats(counts) {
+    const bar = document.getElementById('stats-bar');
+    bar.innerHTML = Object.entries(counts)
+      .sort((a,b) => b[1]-a[1])
+      .map(([proto, count]) => `
+        <div class="pt-stat-pill">
+          <div class="proto-dot" style="background:${PROTO_COLORS[proto]||PROTO_COLORS.default}"></div>
+          <span style="color:${PROTO_COLORS[proto]||PROTO_COLORS.default};font-weight:600">${proto}</span>
+          <span style="color:rgba(255,255,255,0.4)">${count}</span>
+        </div>
+      `).join('');
+    document.getElementById('stats-section').style.display = 'block';
+
+    // Proto filter buttons
+    const protoFilters = document.getElementById('proto-filters');
+    protoFilters.innerHTML = ['All', ...Object.keys(counts)].map(p => `
+      <button class="proto-filter-btn ${p==='All'?'active':''}" onclick="filterByProto('${p}', this)">${p}</button>
+    `).join('');
+    document.getElementById('filter-section').style.display = 'block';
+  }
+
+  function renderTable(packets) {
+    const tbody = document.getElementById('packet-tbody');
+    if (!packets.length) {
+      tbody.innerHTML = `<tr><td colspan="7"><div class="empty-pt"><div class="empty-pt-icon">📭</div><p>No packets to display</p></div></td></tr>`;
+    } else {
+      tbody.innerHTML = packets.map(p => `
+        <tr onclick="showDetail(${p.no - 1})" id="row-${p.no}">
+          <td style="color:rgba(255,255,255,0.4)">${p.no}</td>
+          <td class="mono" style="color:rgba(255,255,255,0.5);font-size:0.7rem">${p.time || '—'}</td>
+          <td class="mono">${p.src || '—'}</td>
+          <td class="mono">${p.dst || '—'}</td>
+          <td><span class="proto-badge proto-${p.protocol} ${!PROTO_COLORS[p.protocol]?'proto-default':''}">${p.protocol}</span></td>
+          <td style="color:rgba(255,255,255,0.4)">${p.length}</td>
+          <td style="color:rgba(255,255,255,0.6);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.info||'—'}</td>
+        </tr>
+      `).join('');
+    }
+    document.getElementById('table-section').style.display = 'block';
+  }
+
+  let activeProtoFilter = 'All';
+  let activeTextFilter = '';
+
+  function filterByProto(proto, btn) {
+    activeProtoFilter = proto;
+    document.querySelectorAll('.proto-filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyFilter();
+  }
+
+  function applyFilter() {
+    activeTextFilter = document.getElementById('filter-input').value.toLowerCase();
+    const filtered = allPackets.filter(p => {
+      const protoOk = activeProtoFilter === 'All' || p.protocol === activeProtoFilter;
+      const textOk = !activeTextFilter ||
+        p.src.toLowerCase().includes(activeTextFilter) ||
+        p.dst.toLowerCase().includes(activeTextFilter) ||
+        p.protocol.toLowerCase().includes(activeTextFilter) ||
+        p.info.toLowerCase().includes(activeTextFilter);
+      return protoOk && textOk;
+    });
+    renderTable(filtered);
+  }
+
+  function showDetail(idx) {
+    const p = allPackets[idx];
+    if (!p) return;
+
+    document.querySelectorAll('.pt-table tr').forEach(r => r.classList.remove('selected'));
+    const row = document.getElementById('row-' + p.no);
+    if (row) row.classList.add('selected');
+
+    const panel = document.getElementById('detail-panel');
+    panel.classList.add('show');
+
+    const fields = [
+      { key: 'Packet No.', val: p.no },
+      { key: 'Time', val: p.time || '—' },
+      { key: 'Source', val: p.src || '—' },
+      { key: 'Destination', val: p.dst || '—' },
+      { key: 'Protocol', val: p.protocol },
+      { key: 'Length', val: p.length + ' bytes' },
+      { key: 'Layers', val: p.layers.join(' → ') || '—' },
+      { key: 'Info', val: p.info || '—' },
+    ];
+
+    document.getElementById('detail-grid').innerHTML = fields.map(f => `
+      <div class="detail-field">
+        <div class="detail-key">${f.key}</div>
+        <div class="detail-val">${f.val}</div>
+      </div>
+    `).join('');
+
+    if (p.raw_hex) {
+      document.getElementById('hex-label').style.display = 'block';
+      document.getElementById('hex-dump').style.display = 'block';
+      const hex = p.raw_hex.match(/.{1,2}/g).join(' ');
+      document.getElementById('hex-dump').textContent = hex;
+    } else {
+      document.getElementById('hex-label').style.display = 'none';
+      document.getElementById('hex-dump').style.display = 'none';
+    }
+  }
+
+  function fileToBase64(file) {
+    return new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload = () => res(r.result.split(',')[1]);
+      r.onerror = () => rej(new Error('File read failed'));
+      r.readAsDataURL(file);
+    });
+  }
+
+  function getCookie(name) {
+    let v = null;
+    document.cookie.split(';').forEach(c => {
+      c = c.trim();
+      if (c.startsWith(name + '=')) v = decodeURIComponent(c.slice(name.length + 1));
+    });
+    return v;
+  }
+</script>
+</body>
+</html>
