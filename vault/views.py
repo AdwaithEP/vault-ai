@@ -4,6 +4,7 @@ from django.http import JsonResponse
 from .models import Password
 from cryptography.fernet import Fernet
 from scanner.models import ScanHistory
+from accounts.models import UserProfile
 import os
 import json
 import re
@@ -88,6 +89,25 @@ def reveal_password(request):
             return JsonResponse({'success': False})
 
         try:
+            password = Password.objects.get(id=pw_id, user=request.user)
+            decrypted = f.decrypt(password.password.encode()).decode()
+            return JsonResponse({'success': True, 'password': decrypted})
+        except:
+            return JsonResponse({'success': False})
+
+@login_required
+def reveal_password(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        pw_id = data.get('id')
+        pin = data.get('pin')
+
+        try:
+            profile = UserProfile.objects.get(user=request.user)
+            if not profile.vault_pin:
+                return JsonResponse({'success': False, 'error': 'No PIN set. Go to Settings to set one.'})
+            if pin != profile.vault_pin:
+                return JsonResponse({'success': False})
             password = Password.objects.get(id=pw_id, user=request.user)
             decrypted = f.decrypt(password.password.encode()).decode()
             return JsonResponse({'success': True, 'password': decrypted})
