@@ -4,4 +4,3 @@ __pycache__/
 db.sqlite3
 venv/
 *.sqlite3
-vercel.json
